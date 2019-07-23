@@ -151,8 +151,24 @@ el1_irq:
 
 el0_irq:
 	kernel_entry 0 
-	bl	handle_irq
-	kernel_exit 0 
+	
+    //
+    adr x0, msg_irq_entry
+    mov x1, x30
+    mov x2, sp
+    bl  debug
+    //
+
+    bl	handle_irq
+	
+    //
+    adr x0, msg_irq_exit
+    mov x1, x30
+    mov x2, sp
+    bl  debug
+    //
+
+    kernel_exit 0 
 
 el0_sync:
 	kernel_entry 0
@@ -167,7 +183,35 @@ scno	.req	x26					// syscall number
 stbl	.req	x27					// syscall table pointer
 
 el0_svc:
-	adr	stbl, sys_call_table			// load syscall table pointer
+    
+    //
+    mov x19, x0
+    mov x20, x1
+    mov x21, x2
+    mov x22, x3
+    mov x23, x4
+    mov x24, x5
+    mov x25, x6
+    mov x26, x7
+    mov x27, x8
+
+    adr x0, msg_svc_entry
+    mov x1, x8
+    mov x2, sp
+    bl  debug
+	
+    mov x0, x19
+    mov x1, x20
+    mov x2, x21
+    mov x3, x22
+    mov x4, x23
+    mov x5, x24
+    mov x6, x25
+    mov x7, x26
+    mov x8, x27
+    //
+
+    adr	stbl, sys_call_table			// load syscall table pointer
 	uxtw	scno, w8				// syscall number in w8
 	mov	sc_nr, #__NR_syscalls
 	bl	enable_irq
@@ -180,17 +224,46 @@ el0_svc:
 ni_sys:
 	handle_invalid_entry 0, SYSCALL_ERROR
 ret_from_syscall:
-	bl	disable_irq				
+    
+    //
+    mov x19, x0
+    adr x0, msg_svc_exit
+    mov x1, x19
+    mov x2, sp
+    bl  debug
+
+    mov x0, x19
+	//
+    
+    bl	disable_irq				
 	str	x0, [sp, #S_X0]				// returned x0
 	kernel_exit 0
 
 .globl ret_from_fork
 ret_from_fork:
 	bl	schedule_tail
-	cbz	x19, ret_to_user			// not a kernel thread
-	mov	x0, x20
+	
+
+    cbz	x19, ret_to_user			// not a kernel thread
+    
+    ///
+    adr x0, msg_ret_from_fork_kernel
+    mov x1, x30
+    mov x2, sp
+    bl debug
+    ///
+	
+    mov	x0, x20
 	blr	x19
 ret_to_user:
+
+    ///
+    adr x0, msg_ret_from_fork_user
+    mov x1, x30
+    mov x2, sp
+    bl debug
+    ///
+
 	bl disable_irq				
 	kernel_exit 0 
 

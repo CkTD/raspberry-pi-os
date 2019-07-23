@@ -23,6 +23,7 @@ void preempt_enable(void)
 
 void _schedule(void)
 {
+    printf("\t_schedule...\r\n");
 	preempt_disable();
 	int next,c;
 	struct task_struct * p;
@@ -52,6 +53,7 @@ void _schedule(void)
 
 void schedule(void)
 {
+    printf("[schedule called] current: 0x%x\r\n", current);
 	current->counter = 0;
 	_schedule();
 }
@@ -63,7 +65,8 @@ void switch_to(struct task_struct * next, int index)
 		return;
 	struct task_struct * prev = current;
 	current = next;
-	cpu_switch_to(prev, next);
+	printf("\tswitch from 0x%x to 0x%x\r\n", prev, next);
+    cpu_switch_to(prev, next);
 }
 
 void schedule_tail(void) {
@@ -72,6 +75,7 @@ void schedule_tail(void) {
 
 void timer_tick()
 {
+    printf("\tTimer Tick!\r\n");
 	--current->counter;
 	if (current->counter>0 || current->preempt_count >0) {
 		return;

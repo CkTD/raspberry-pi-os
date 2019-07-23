@@ -4,6 +4,11 @@ get_el:
 	lsr x0, x0, #2
 	ret
 
+.globl get_elr
+get_elr:
+    mrs x0, elr_el1
+    ret
+
 .globl put32
 put32:
 	str w1,[x0]
